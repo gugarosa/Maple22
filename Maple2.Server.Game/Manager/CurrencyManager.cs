@@ -60,8 +60,6 @@ public class CurrencyManager {
         }
     }
 
-    // Removed meso gain/cost scaling. Meso adjustments are applied directly.
-
     public long CanAddMeso(long amount) {
         return amount >= 0
             ? Math.Min(amount, Constant.MaxMeso - Currency.Meso)
