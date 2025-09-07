@@ -17,5 +17,11 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 9
-      - name: Run dotnet format
+      - name: Run dotnet format (whitespace)
         run: dotnet format whitespace --verify-no-changes --exclude 'Maple2.Server.World/Migrations/*.cs'
+
+      - name: Run dotnet format (style)
+        run: dotnet format style --verify-no-changes --severity info --exclude 'Maple2.Server.World/Migrations/*.cs'
+
+      - name: Run dotnet format (analyzers)
+        run: dotnet format analyzers --verify-no-changes --severity info --exclude 'Maple2.Server.World/Migrations/*.cs'

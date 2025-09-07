@@ -7,6 +7,14 @@ insert_final_newline = true
 indent_style = space
 indent_size = 4
 
+dotnet_sort_system_directives_first = true
+csharp_using_directive_placement = outside_namespace:warning
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
+csharp_style_expression_bodied_properties = when_on_single_line:suggestion
+csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion
+csharp_style_throw_expression = true:suggestion
+csharp_prefer_simple_default_expression = true:suggestion
+
 # Microsoft .NET properties
 csharp_new_line_before_catch = false
 csharp_new_line_before_else = false
@@ -78,6 +86,11 @@ dotnet_style_qualification_for_field = false:suggestion
 dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
+
+# Analyzer severities (example)
+dotnet_diagnostic.IDE0005.severity = warning   # remove unused usings
+dotnet_diagnostic.IDE0063.severity = suggestion # using var
+dotnet_diagnostic.IDE0044.severity = suggestion # make field readonly
 
 # ReSharper properties
 resharper_align_linq_query = true
