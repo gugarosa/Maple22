@@ -528,6 +528,14 @@ public sealed class QuestManager {
         session.Config.ExplorationProgress = metadata.MissionCount;
         session.Send(QuestPacket.UpdateExploration(session.Config.ExplorationProgress));
 
+        // Persist exploration progress right away so it survives quick restarts
+        try {
+            using var db = session.GameStorage.Context();
+            session.Config.Save(db);
+        } catch {
+            
+        }
+
         if (metadata.Item != null) {
             Item? item = session.Field?.ItemDrop.CreateItem(metadata.Item.ItemId, metadata.Item.Rarity, metadata.Item.Rarity);
             if (item != null) {

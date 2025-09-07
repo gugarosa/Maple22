@@ -271,6 +271,8 @@ public partial class GameStorage {
         public bool SavePlayer(Player player) {
             Console.WriteLine($"> Begin Save... {Context.ContextId}");
 
+            Context.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.TrackAll;
+
             Model.Account account = player.Account;
             account.Currency = new AccountCurrency {
                 Meret = player.Currency.Meret,
@@ -292,18 +294,23 @@ public partial class GameStorage {
                 StarPoint = player.Currency.StarPoint,
             };
 
-            Model.Account? dbAccount = Context.Account.Find(account.Id);
-            if (dbAccount == null) {
-                return false;
-            }
+            Model.Account? dbAccount = Context.Account.FirstOrDefault(a => a.Id == account.Id);
+            if (dbAccount == null) return false;
             account.Password = dbAccount.Password;
+            Context.Entry(dbAccount).CurrentValues.SetValues(account);
 
-            Context.Update(account);
-            Context.Update(character);
+            Model.Character? dbCharacter = Context.Character.FirstOrDefault(c => c.Id == character.Id);
+            if (dbCharacter == null) return false;
+            Context.Entry(dbCharacter).CurrentValues.SetValues(character);
 
             CharacterUnlock unlock = player.Unlock;
             unlock.CharacterId = character.Id;
-            Context.Update(unlock);
+            Model.CharacterUnlock? dbUnlock = Context.CharacterUnlock.FirstOrDefault(u => u.CharacterId == character.Id);
+            if (dbUnlock == null) {
+                Context.CharacterUnlock.Add(unlock);
+            } else {
+                Context.Entry(dbUnlock).CurrentValues.SetValues(unlock);
+            }
 
             Context.ChangeTracker.Entries().DisplayStates();
             return Context.TrySaveChanges();
