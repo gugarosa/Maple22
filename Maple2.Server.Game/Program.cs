@@ -98,6 +98,9 @@ builder.WebHost.UseKestrel(options => {
     options.Listen(new IPEndPoint(IPAddress.Any, response.GrpcPort), listen => {
         listen.Protocols = HttpProtocols.Http2;
     });
+    options.Listen(new IPEndPoint(IPAddress.Any, 8080), listen => {
+        listen.Protocols = HttpProtocols.Http1;
+    });
 });
 builder.Services.Configure<HostOptions>(options => options.ShutdownTimeout = TimeSpan.FromSeconds(15));
 
@@ -183,5 +186,6 @@ app.UseRouting();
 app.MapGet("/", () => "Communication with gRPC endpoints must be made through a gRPC client.");
 app.MapGrpcService<ChannelService>();
 app.MapGrpcHealthChecksService();
+app.MapHealthChecks("/healthz");
 
 await app.RunAsync();

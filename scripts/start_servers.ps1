@@ -17,7 +17,7 @@ $UseV2 = Test-ComposeV2
 
 function Compose {
   param([Parameter(ValueFromRemainingArguments=$true)][string[]]$Args)
-  if ($UseV2) { & docker compose @Args } else { & docker-compose @Args }
+  if ($UseV2) { & docker 'compose' @Args } else { & docker-compose @Args }
 }
 
 function Wait-Healthy {
@@ -86,14 +86,18 @@ $gameServices = @()
 if ($IncludeInstanced) { $gameServices += 'game-ch0' }
 foreach ($ch in $NonInstancedChannels) { $gameServices += "game-ch$ch" }
 
+if ($GameOnly -and -not $PSBoundParameters.ContainsKey('NoBuild')) {
+  $NoBuild = $true
+}
+
 if (-not $NoBuild) {
   if ($GameOnly) {
     if ($gameServices.Count -eq 0) { $gameServices = @('game-ch0') }
     Write-Host "Building game images only: $($gameServices -join ', ')"
-    Compose @('build','--pull') + $gameServices
+    Compose (@('build','--pull') + $gameServices)
   } else {
     Write-Host "Building images..."
-    Compose build --pull
+    Compose @('build','--pull')
   }
 }
 
@@ -119,6 +123,10 @@ if ($GameOnly) { $upArgs += @('--no-deps','--force-recreate') }
 if (-not $NoBuild -and $UseV2) { $upArgs += '--build' }
 
 foreach ($svc in $gameServices) {
+  if ($GameOnly) {
+    try { Compose @('rm','-s','-f', $svc) } catch { }
+    Start-Sleep -Seconds 2
+  }
   Compose ($upArgs + $svc)
   $null = Wait-Healthy -Service $svc -TimeoutSec 300 -Soft
   $started += $svc
