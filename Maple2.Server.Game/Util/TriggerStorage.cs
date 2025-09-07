@@ -22,7 +22,8 @@ public class TriggerCache : LRUCache<(string, string), Trigger.Helpers.Trigger> 
             return true;
         }
 
-        if (!Constant.DebugTriggers) {
+        bool debug = Constant.DebugTriggers;
+        if (!debug) {
             if (triggerMetadata.TryGet(mapXBlock, triggerName, out TriggerMetadata? metadata)) {
                 try {
                     var document = new XmlDocument();

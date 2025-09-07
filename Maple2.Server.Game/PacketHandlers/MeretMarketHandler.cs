@@ -302,16 +302,6 @@ public class MeretMarketHandler : FieldPacketHandler {
 
         session.Send(MeretMarketPacket.Purchase(totalQuantity, itemIndex, price, premiumMarketId, ugcItemId));
         return;
-
-        PlayerInfo? GetGiftedPlayerInfo(GameSession session, string name) {
-            if (string.IsNullOrWhiteSpace(name)) {
-                return null;
-            }
-            using GameStorage.Request db = session.GameStorage.Context();
-            long characterId = db.GetCharacterId(name);
-            session.PlayerInfo.GetOrFetch(characterId, out PlayerInfo? receiverInfo);
-            return receiverInfo;
-        }
     }
 
     private Item? PurchasePremiumItem(GameSession session, int premiumMarketId, int childMarketItemId) {

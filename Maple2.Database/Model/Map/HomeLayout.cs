@@ -8,14 +8,14 @@ namespace Maple2.Database.Model;
 internal class HomeLayout {
     public long Uid { get; set; }
     public int Id { get; set; }
-    public string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public byte Area { get; set; }
     public byte Height { get; set; }
     public HomeBackground Background { get; set; }
     public HomeLighting Lighting { get; set; }
     public HomeCamera Camera { get; set; }
     public DateTimeOffset Timestamp { get; set; }
-    public List<HomeLayoutCube> Cubes { get; set; } = null!;
+    public List<HomeLayoutCube> Cubes { get; set; } = new();
 
     [return: NotNullIfNotNull(nameof(other))]
     public static implicit operator HomeLayout?(Maple2.Model.Game.HomeLayout? other) {

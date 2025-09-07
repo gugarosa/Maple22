@@ -31,11 +31,9 @@ public class RandomNumberCommand : GameCommand {
             return;
         }
 
-        if (!Constant.EnableRollEverywhere) {
-            return;
+        if (Constant.EnableRollEverywhere) {
+            var interfaceText = new InterfaceText(StringCode.s_ugcmap_fun_roll, character.Name, rng.ToString());
+            session.Field.Broadcast(NoticePacket.Notice(NoticePacket.Flags.Message, interfaceText));
         }
-
-        var interfaceText = new InterfaceText(StringCode.s_ugcmap_fun_roll, character.Name, rng.ToString());
-        session.Field.Broadcast(NoticePacket.Notice(NoticePacket.Flags.Message, interfaceText));
     }
 }
