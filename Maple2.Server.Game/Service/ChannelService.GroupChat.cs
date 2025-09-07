@@ -30,28 +30,24 @@ public partial class ChannelService {
         }
 
         IEnumerable<long> characterIds = receiverIds.ToList();
-        foreach (long characterId in characterIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(characterIds, (characterId, session) => {
             if (characterId == add.CharacterId) {
                 JoinGroupChat(session, add.RequesterName, characterIds, ToGroupChatInfo(groupChatId, characterIds));
-                continue;
+                return;
             }
 
             if (!session.GroupChats.TryGetValue(groupChatId, out GroupChatManager? manager)) {
-                continue;
+                return;
             }
 
             GroupChatMember? sender = manager.GetMember(add.RequesterId);
             if (sender == null) {
-                continue;
+                return;
             }
             manager.AddMember(sender, new GroupChatMember {
                 Info = info.Clone(),
             });
-        }
+        });
 
         return new GroupChatResponse();
     }
@@ -72,43 +68,32 @@ public partial class ChannelService {
     }
 
     private GroupChatResponse RemoveGroupChatMember(int groupChatId, IEnumerable<long> receiverIds, GroupChatRequest.Types.RemoveMember remove) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(receiverIds, (characterId, session) => {
             if (!session.GroupChats.TryGetValue(groupChatId, out GroupChatManager? manager)) {
-                continue;
+                return;
             }
-
             manager.RemoveMember(remove.CharacterId);
             if (characterId == remove.CharacterId) {
                 session.GroupChats.Remove(groupChatId, out _);
             }
-        }
+        });
 
         return new GroupChatResponse();
     }
 
     private GroupChatResponse ChatGroupChat(int groupChatId, IEnumerable<long> receiverIds, GroupChatRequest.Types.Chat chat) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Send(GroupChatPacket.Chat(chat.RequesterName, groupChatId, chat.Message));
-        }
+        ForEachSession(receiverIds, (_, session) =>
+            session.Send(GroupChatPacket.Chat(chat.RequesterName, groupChatId, chat.Message))
+        );
         return new GroupChatResponse();
     }
 
     private GroupChatResponse DisbandGroupChat(int groupChatId, IEnumerable<long> receiverIds, GroupChatRequest.Types.Disband disband) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session) || !session.GroupChats.TryGetValue(groupChatId, out GroupChatManager? manager)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.GroupChats.TryGetValue(groupChatId, out GroupChatManager? manager)) {
+                manager.Disband();
             }
-
-            manager.Disband();
-        }
+        });
 
         return new GroupChatResponse();
     }
@@ -124,4 +109,3 @@ public partial class ChannelService {
         };
     }
 }
-

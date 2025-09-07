@@ -8,6 +8,29 @@ using Maple2.Server.Game.Session;
 namespace Maple2.Server.Game.Service;
 
 public partial class ChannelService {
+    private static bool HasAttachedItems(List<Item> items) => items.Count > 0;
+
+    private void SendToMembers(IEnumerable<long> memberIds, List<Item> items, Action<GameSession> sendAction) {
+        foreach (long characterId in memberIds) {
+            if (!server.GetSession(characterId, out GameSession? session)) {
+                continue;
+            }
+
+            if (HasAttachedItems(items)) {
+                session.Send(MessengerBrowserPacket.Link(items.ToArray()));
+            }
+
+            sendAction(session);
+        }
+    }
+
+    private void BroadcastChatWithOptionalItems(List<Item> items, Maple2.PacketLib.Tools.ByteWriter chatPacket) {
+        if (HasAttachedItems(items)) {
+            server.Broadcast(MessengerBrowserPacket.Link(items.ToArray()));
+        }
+        server.Broadcast(chatPacket);
+    }
+
     public override Task<ChatResponse> Chat(ChatRequest request, ServerCallContext context) {
         using GameStorage.Request db = gameStorage.Context();
 
@@ -61,64 +84,35 @@ public partial class ChannelService {
     }
 
     private void PartyChat(ChatRequest request, List<Item> items) {
-        foreach (long characterId in request.Party.MemberIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            if (items.Count > 0) {
-                session.Send(MessengerBrowserPacket.Link(items.ToArray()));
-            }
-            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Party, request.Message));
-        }
+        SendToMembers(request.Party.MemberIds, items, session =>
+            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Party, request.Message))
+        );
     }
 
     private void GuildChat(ChatRequest request, List<Item> items) {
-        foreach (long characterId in request.Guild.MemberIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            if (items.Count > 0) {
-                session.Send(MessengerBrowserPacket.Link(items.ToArray()));
-            }
-
-            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Guild, request.Message));
-        }
+        SendToMembers(request.Guild.MemberIds, items, session =>
+            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Guild, request.Message))
+        );
     }
 
     private void WorldChat(ChatRequest request, List<Item> items) {
-        if (items.Count > 0) {
-            server.Broadcast(MessengerBrowserPacket.Link(items.ToArray()));
-        }
-        server.Broadcast(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.World, request.Message));
+        BroadcastChatWithOptionalItems(items,
+            ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.World, request.Message));
     }
 
     private void SuperChat(ChatRequest request, List<Item> items) {
-        if (items.Count > 0) {
-            server.Broadcast(MessengerBrowserPacket.Link(items.ToArray()));
-        }
-        server.Broadcast(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Super, request.Message, request.Super.ItemId));
+        BroadcastChatWithOptionalItems(items,
+            ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Super, request.Message, request.Super.ItemId));
     }
 
     private void ClubChat(ChatRequest request, List<Item> items) {
-        foreach (long characterId in request.Club.MemberIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            if (items.Count > 0) {
-                session.Send(MessengerBrowserPacket.Link(items.ToArray()));
-            }
-
-            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Club, request.Message, clubId: request.Club.ClubId));
-        }
+        SendToMembers(request.Club.MemberIds, items, session =>
+            session.Send(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.Club, request.Message, clubId: request.Club.ClubId))
+        );
     }
 
     private void SystemChat(ChatRequest request, List<Item> items) {
-        if (items.Count > 0) {
-            server.Broadcast(MessengerBrowserPacket.Link(items.ToArray()));
-        }
-        server.Broadcast(ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.SystemNotice, request.Message));
+        BroadcastChatWithOptionalItems(items,
+            ChatPacket.Message(request.AccountId, request.CharacterId, request.Name, ChatType.SystemNotice, request.Message));
     }
 }

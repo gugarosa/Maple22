@@ -61,13 +61,9 @@ public partial class ChannelService {
     }
 
     private ClubResponse StagedClubFail(long clubId, IEnumerable<long> receiverIds, ClubRequest.Types.StagedClubFail stagedClubFail) {
-        foreach (long receiverId in receiverIds) {
-            if (!server.GetSession(receiverId, out GameSession? session)) {
-                return new ClubResponse { Error = (int) ClubError.s_club_err_null_member };
-            }
-
-            session.Send(ClubPacket.DeleteStagedClub(clubId, (Maple2.Model.Enum.ClubResponse) stagedClubFail.Reply));
-        }
+        ForEachSession(receiverIds, (_, session) =>
+            session.Send(ClubPacket.DeleteStagedClub(clubId, (Maple2.Model.Enum.ClubResponse) stagedClubFail.Reply))
+        );
         return new ClubResponse();
     }
 
@@ -126,18 +122,11 @@ public partial class ChannelService {
     }
 
     private ClubResponse RemoveMember(long clubId, IEnumerable<long> receiverIds, ClubRequest.Types.RemoveMember remove) {
-        foreach (long receiverId in receiverIds) {
-            if (!server.GetSession(receiverId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Clubs.TryGetValue(clubId, out ClubManager? manager)) {
+                manager.RemoveMember(remove.CharacterId);
             }
-
-            if (!session.Clubs.TryGetValue(clubId, out ClubManager? manager)) {
-                continue;
-            }
-
-            manager.RemoveMember(remove.CharacterId);
-        }
-
+        });
         return new ClubResponse();
     }
 
@@ -166,14 +155,9 @@ public partial class ChannelService {
     }
 
     private ClubResponse InviteReply(long clubId, IEnumerable<long> receiverIds, ClubRequest.Types.InviteReply reply) {
-        foreach (long receiverId in receiverIds) {
-            if (!server.GetSession(receiverId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Send(ClubPacket.InviteNotification(clubId, reply.RequestorName, reply.Accept));
-        }
-
+        ForEachSession(receiverIds, (_, session) =>
+            session.Send(ClubPacket.InviteNotification(clubId, reply.RequestorName, reply.Accept))
+        );
         return new ClubResponse();
     }
 
@@ -182,39 +166,27 @@ public partial class ChannelService {
             return new ClubResponse { Error = (int) ClubError.s_club_err_null_invite_member };
         }
 
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(receiverIds, (_, session) => {
             if (!session.Clubs.TryGetValue(clubId, out ClubManager? manager)) {
-                continue;
+                return;
             }
-
             var member = new ClubMember {
                 ClubId = clubId,
                 Info = info.Clone(),
                 JoinTime = add.JoinTime,
             };
             manager.AddMember(add.RequestorName, member);
-        }
+        });
 
         return new ClubResponse();
     }
 
     private ClubResponse UpdateLeader(long clubId, IEnumerable<long> receiverIds, ClubRequest.Types.UpdateLeader update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Clubs.TryGetValue(clubId, out ClubManager? manager)) {
+                manager.UpdateLeader(update.CharacterId);
             }
-
-            if (!session.Clubs.TryGetValue(clubId, out ClubManager? manager)) {
-                continue;
-            }
-
-            manager.UpdateLeader(update.CharacterId);
-        }
-
+        });
         return new ClubResponse();
     }
 

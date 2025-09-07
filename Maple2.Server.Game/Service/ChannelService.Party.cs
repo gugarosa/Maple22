@@ -66,14 +66,9 @@ public partial class ChannelService {
     }
 
     private PartyResponse PartyInviteReply(IEnumerable<long> receiverIds, PartyRequest.Types.InviteReply reply) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Send(PartyPacket.Error((PartyError) reply.Reply, reply.Name));
-        }
-
+        ForEachSession(receiverIds, (_, session) =>
+            session.Send(PartyPacket.Error((PartyError) reply.Reply, reply.Name))
+        );
         return new PartyResponse();
     }
 
@@ -82,151 +77,83 @@ public partial class ChannelService {
             return new PartyResponse { Error = (int) PartyError.s_party_err_cannot_invite };
         }
 
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Party.AddMember(new PartyMember {
-                PartyId = partyId,
-                Info = info.Clone(),
-                JoinTime = add.JoinTime,
-            });
-        }
+        ForEachSession(receiverIds, (_, session) => session.Party.AddMember(new PartyMember {
+            PartyId = partyId,
+            Info = info.Clone(),
+            JoinTime = add.JoinTime,
+        }));
 
         return new PartyResponse();
     }
 
     private PartyResponse RemovePartyMember(IEnumerable<long> receiverIds, PartyRequest.Types.RemoveMember remove) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(receiverIds, (characterId, session) => {
             bool isSelf = characterId == remove.CharacterId;
             session.Party.RemoveMember(remove.CharacterId, remove.IsKicked, isSelf);
             if (isSelf) {
                 session.Party.RemoveParty();
             }
-        }
-
+        });
         return new PartyResponse();
     }
 
     private PartyResponse UpdatePartyLeader(IEnumerable<long> receiverIds, PartyRequest.Types.UpdateLeader update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Party.UpdateLeader(update.CharacterId);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Party.UpdateLeader(update.CharacterId));
         return new PartyResponse();
     }
 
     private PartyResponse Disband(IEnumerable<long> receiverIds, object disband) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Party.Disband();
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Party.Disband());
         return new PartyResponse();
     }
 
     private PartyResponse StartReadyCheck(IEnumerable<long> receiverIds, PartyRequest.Types.StartReadyCheck startReadyCheck) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Party.StartReadyCheck(startReadyCheck.CharacterId);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Party.StartReadyCheck(startReadyCheck.CharacterId));
         return new PartyResponse();
     }
 
     private PartyResponse ReadyCheckReply(IEnumerable<long> receiverIds, PartyRequest.Types.VoteReply reply) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Party.Id == reply.PartyId) {
+                session.Party.ReadyCheckReply(reply.CharacterId, reply.Reply);
             }
-
-            if (session.Party.Id != reply.PartyId) {
-                continue;
-            }
-
-            session.Party.ReadyCheckReply(reply.CharacterId, reply.Reply);
-        }
-
+        });
         return new PartyResponse();
     }
 
     private PartyResponse EndVote(IEnumerable<long> receiverIds, PartyRequest.Types.EndVote endVote) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Party.Id == endVote.PartyId) {
+                session.Party.EndVote();
             }
-
-            if (session.Party.Id != endVote.PartyId) {
-                continue;
-            }
-
-            session.Party.EndVote();
-        }
-
+        });
         return new PartyResponse();
     }
 
     private PartyResponse ExpiredVote(IEnumerable<long> receiverIds, PartyRequest.Types.ExpiredVote expiredVote) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Party.Id == expiredVote.PartyId) {
+                session.Party.ExpiredVote();
             }
-
-            if (session.Party.Id != expiredVote.PartyId) {
-                continue;
-            }
-
-            session.Party.ExpiredVote();
-        }
-
+        });
         return new PartyResponse();
     }
 
     private PartyResponse StartVoteKick(IEnumerable<long> receiverIds, int partyId, PartyRequest.Types.StartVoteKick startVoteKick) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Party.Id == partyId) {
+                session.Party.StartVoteKick(startVoteKick.CharacterId, startVoteKick.TargetId, startVoteKick.ReceiverIds);
             }
-
-            if (session.Party.Id != partyId) {
-                continue;
-            }
-
-            session.Party.StartVoteKick(startVoteKick.CharacterId, startVoteKick.TargetId, startVoteKick.ReceiverIds);
-        }
-
+        });
         return new PartyResponse();
     }
 
     private PartyResponse SetDungeon(IEnumerable<long> receiverIds, PartyRequest.Types.SetDungeon setDungeon) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
+        ForEachSession(receiverIds, (_, session) => {
+            if (session.Party.Party?.Id == setDungeon.PartyId) {
+                session.Party.SetDungeon(setDungeon.DungeonId, setDungeon.DungeonRoomId, setDungeon.Set);
             }
-
-            if (session.Party.Party?.Id != setDungeon.PartyId) {
-                continue;
-            }
-
-            session.Party.SetDungeon(setDungeon.DungeonId, setDungeon.DungeonRoomId, setDungeon.Set);
-        }
-
+        });
         return new PartyResponse();
     }
 }
-

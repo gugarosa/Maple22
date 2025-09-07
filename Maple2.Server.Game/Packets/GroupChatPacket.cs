@@ -23,9 +23,14 @@ public static class GroupChatPacket {
         Error = 13,
     }
 
-    public static ByteWriter Load(GroupChat groupChat) {
+    private static ByteWriter Start(Command command) {
         var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Load);
+        pWriter.Write<Command>(command);
+        return pWriter;
+    }
+
+    public static ByteWriter Load(GroupChat groupChat) {
+        var pWriter = Start(Command.Load);
         pWriter.WriteInt(groupChat.Id);
         pWriter.WriteByte((byte) groupChat.Members.Count);
         foreach ((long characterId, GroupChatMember member) in groupChat.Members) {
@@ -37,16 +42,14 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter Create(int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Create);
+        var pWriter = Start(Command.Create);
         pWriter.WriteInt(groupChatId);
 
         return pWriter;
     }
 
     public static ByteWriter Invite(string memberName, string targetName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Invite);
+        var pWriter = Start(Command.Invite);
         pWriter.WriteUnicodeString(memberName);
         pWriter.WriteUnicodeString(targetName);
         pWriter.WriteInt(groupChatId);
@@ -55,8 +58,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter Join(string senderMemberName, string receiverTargetName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Join);
+        var pWriter = Start(Command.Join);
         pWriter.WriteUnicodeString(senderMemberName);
         pWriter.WriteUnicodeString(receiverTargetName);
         pWriter.WriteInt(groupChatId);
@@ -65,16 +67,14 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter Leave(int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Leave);
+        var pWriter = Start(Command.Leave);
         pWriter.WriteInt(groupChatId);
 
         return pWriter;
     }
 
     public static ByteWriter AddMember(PlayerInfo targetCharacter, string inviterName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.AddMember);
+        var pWriter = Start(Command.AddMember);
         pWriter.WriteInt(groupChatId);
         pWriter.WriteUnicodeString(inviterName);
         pWriter.WriteBool(true); // is member?
@@ -84,8 +84,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter RemoveMember(string memberName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.RemoveMember);
+        var pWriter = Start(Command.RemoveMember);
         pWriter.WriteInt(groupChatId);
         pWriter.WriteBool(false); // is not member?
         pWriter.WriteUnicodeString(memberName);
@@ -94,8 +93,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter LoginNotice(string memberName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.LoginNotice);
+        var pWriter = Start(Command.LoginNotice);
         pWriter.WriteInt(groupChatId);
         pWriter.WriteUnicodeString(memberName);
 
@@ -103,8 +101,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter LogoutNotice(string memberName, int groupChatId) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.LogoutNotice);
+        var pWriter = Start(Command.LogoutNotice);
         pWriter.WriteInt(groupChatId);
         pWriter.WriteUnicodeString(memberName);
 
@@ -112,8 +109,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter Chat(string memberName, int groupChatId, string message) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Chat);
+        var pWriter = Start(Command.Chat);
         pWriter.WriteInt(groupChatId);
         pWriter.WriteUnicodeString(memberName);
         pWriter.WriteUnicodeString(message);
@@ -122,8 +118,7 @@ public static class GroupChatPacket {
     }
 
     public static ByteWriter Error(GroupChatError error, string memberName, string targetName) {
-        var pWriter = Packet.Of(SendOp.GroupChat);
-        pWriter.Write<Command>(Command.Error);
+        var pWriter = Start(Command.Error);
         pWriter.WriteByte(2); // Unknown
         pWriter.Write<GroupChatError>(error);
         pWriter.WriteUnicodeString(memberName);

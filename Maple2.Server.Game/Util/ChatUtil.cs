@@ -19,7 +19,7 @@ public static class ChatUtil {
         const int unknownMode = 3;
         string message = string.Join(",", unknownMode, item.Uid, (int) AnnounceType.s_itemenchant_success_notice, session.PlayerName);
 
-        ChatResponse? chatResponse = session.World.Chat(new ChatRequest {
+        _ = session.World.Chat(new ChatRequest {
             AccountId = session.AccountId,
             CharacterId = session.CharacterId,
             Name = session.PlayerName,

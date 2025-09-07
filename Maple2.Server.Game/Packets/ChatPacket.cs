@@ -8,16 +8,26 @@ using Maple2.Server.Core.Packets;
 namespace Maple2.Server.Game.Packets;
 
 public static class ChatPacket {
-    public static ByteWriter Message(Player player, ChatType type, string message) {
+    private static ByteWriter StartChat(long accountId, long characterId, string name, string message, ChatType type, bool htmlOrCodeFlag = false) {
         var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong(player.Account.Id);
-        pWriter.WriteLong(player.Character.Id);
-        pWriter.WriteUnicodeString(player.Character.Name);
-        pWriter.WriteBool(false);
+        pWriter.WriteLong(accountId);
+        pWriter.WriteLong(characterId);
+        pWriter.WriteUnicodeString(name);
+        pWriter.WriteBool(htmlOrCodeFlag);
         pWriter.WriteUnicodeString(message);
         pWriter.Write<ChatType>(type);
         pWriter.WriteBool(false);
         pWriter.WriteInt();
+        return pWriter;
+    }
+
+    private static ByteWriter FinishChat(ByteWriter pWriter) {
+        pWriter.WriteBool(false);
+        return pWriter;
+    }
+
+    public static ByteWriter Message(Player player, ChatType type, string message) {
+        var pWriter = StartChat(player.Account.Id, player.Character.Id, player.Character.Name, message, type);
 
         switch (type) {
             case ChatType.WhisperFrom:
@@ -31,21 +41,11 @@ public static class ChatPacket {
                 break;
         }
 
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter Message(long accountId, long characterId, string characterName, ChatType type, string message, int superChatId = 0, long clubId = 0) {
-        var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong(accountId);
-        pWriter.WriteLong(characterId);
-        pWriter.WriteUnicodeString(characterName);
-        pWriter.WriteBool(false);
-        pWriter.WriteUnicodeString(message);
-        pWriter.Write<ChatType>(type);
-        pWriter.WriteBool(false);
-        pWriter.WriteInt();
+        var pWriter = StartChat(accountId, characterId, characterName, message, type);
 
         switch (type) {
             case ChatType.WhisperFrom:
@@ -59,64 +59,32 @@ public static class ChatPacket {
                 break;
         }
 
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter Whisper(long accountId, long characterId, string name, string message, string? unknown = null) {
         ChatType type = unknown == null ? ChatType.WhisperTo : ChatType.WhisperFrom;
-
-        var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong(accountId);
-        pWriter.WriteLong(characterId);
-        pWriter.WriteUnicodeString(name);
-        pWriter.WriteBool(false);
-        pWriter.WriteUnicodeString(message);
-        pWriter.Write<ChatType>(type);
-        pWriter.WriteBool(false);
-        pWriter.WriteInt();
+        var pWriter = StartChat(accountId, characterId, name, message, type);
 
         if (type == ChatType.WhisperFrom) {
             pWriter.WriteUnicodeString(unknown ?? string.Empty);
         }
 
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter WhisperReject(string name) {
-        var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong();
-        pWriter.WriteLong();
-        pWriter.WriteUnicodeString(name);
-        pWriter.WriteBool(false);
-        pWriter.WriteUnicodeString(".");
-        pWriter.Write<ChatType>(ChatType.WhisperReject);
-        pWriter.WriteBool(false);
-        pWriter.WriteInt();
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        var pWriter = StartChat(0, 0, name, ".", ChatType.WhisperReject);
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter System(string type, string message) {
-        var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong();
-        pWriter.WriteLong();
-        pWriter.WriteUnicodeString(type);
-        pWriter.WriteBool(false);
-        pWriter.WriteUnicodeString(message);
-        pWriter.Write<ChatType>(ChatType.System);
-        pWriter.WriteBool(false);
-        pWriter.WriteInt();
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        var pWriter = StartChat(0, 0, type, message, ChatType.System);
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter Alert(StringCode code) {
+        // In this variant, the message payload is the StringCode written directly; keep sequence consistent
         var pWriter = Packet.Of(SendOp.UserChat);
         pWriter.WriteLong();
         pWriter.WriteLong();
@@ -126,23 +94,11 @@ public static class ChatPacket {
         pWriter.Write<ChatType>(ChatType.NoticeAlert);
         pWriter.WriteBool(false);
         pWriter.WriteInt();
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        return FinishChat(pWriter);
     }
 
     public static ByteWriter Alert(string message, bool htmlEncoded = false) {
-        var pWriter = Packet.Of(SendOp.UserChat);
-        pWriter.WriteLong();
-        pWriter.WriteLong();
-        pWriter.WriteUnicodeString();
-        pWriter.WriteBool(false);
-        pWriter.WriteUnicodeString(htmlEncoded ? message : HttpUtility.HtmlEncode(message));
-        pWriter.Write<ChatType>(ChatType.NoticeAlert);
-        pWriter.WriteBool(false);
-        pWriter.WriteInt();
-        pWriter.WriteBool(false);
-
-        return pWriter;
+        var pWriter = StartChat(0, 0, string.Empty, htmlEncoded ? message : HttpUtility.HtmlEncode(message), ChatType.NoticeAlert);
+        return FinishChat(pWriter);
     }
 }

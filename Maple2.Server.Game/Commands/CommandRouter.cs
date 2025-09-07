@@ -16,39 +16,30 @@ public class CommandRouter {
     private ImmutableDictionary<string, GameCommand> aliasLookup;
     private readonly IConsole console;
     private readonly IComponentContext context;
-
-    public CommandRouter(GameSession session, IComponentContext context) {
+    private static (ImmutableList<GameCommand> list, ImmutableDictionary<string, GameCommand> lookup) BuildLookups(IEnumerable<GameCommand> source) {
         var listBuilder = ImmutableList.CreateBuilder<GameCommand>();
         var dictionaryBuilder = ImmutableDictionary.CreateBuilder<string, GameCommand>();
-        foreach (GameCommand command in context.Resolve<IEnumerable<GameCommand>>(new NamedParameter("session", session))) {
+        foreach (GameCommand command in source) {
             listBuilder.Add(command);
             foreach (string alias in command.Aliases) {
                 dictionaryBuilder.Add(alias.ToLower(), command);
             }
         }
+        return (listBuilder.ToImmutable(), dictionaryBuilder.ToImmutable());
+    }
 
+    public CommandRouter(GameSession session, IComponentContext context) {
         this.session = session;
         this.context = context;
-        commands = listBuilder.ToImmutable();
-        aliasLookup = dictionaryBuilder.ToImmutable();
+        (commands, aliasLookup) = BuildLookups(context.Resolve<IEnumerable<GameCommand>>(new NamedParameter("session", session)));
         console = new GameConsole(session);
     }
 
     public void RegisterCommands() {
-        var listBuilder = ImmutableList.CreateBuilder<GameCommand>();
-        var dictionaryBuilder = ImmutableDictionary.CreateBuilder<string, GameCommand>();
-        foreach (GameCommand command in context.Resolve<IEnumerable<GameCommand>>(new NamedParameter("session", session))) {
-            // Check permissions based on command type
-            if (session.Player?.AdminPermissions.HasFlag(command.RequiredPermission) ?? false) {
-                listBuilder.Add(command);
-                foreach (string alias in command.Aliases) {
-                    dictionaryBuilder.Add(alias.ToLower(), command);
-                }
-            }
-        }
-
-        commands = listBuilder.ToImmutable();
-        aliasLookup = dictionaryBuilder.ToImmutable();
+        (commands, aliasLookup) = BuildLookups(
+            context.Resolve<IEnumerable<GameCommand>>(new NamedParameter("session", session))
+                   .Where(command => session.Player?.AdminPermissions.HasFlag(command.RequiredPermission) ?? false)
+        );
     }
 
     public int Invoke(string commandLine) {

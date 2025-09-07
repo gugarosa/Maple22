@@ -5,9 +5,7 @@ namespace Maple2.Server.Game.Service;
 
 public partial class ChannelService {
     public override Task<BuddyResponse> Buddy(BuddyRequest request, ServerCallContext context) {
-        if (!server.GetSession(request.ReceiverId, out GameSession? session)) {
-            throw new RpcException(new Status(StatusCode.NotFound, $"Unable to find: {request.ReceiverId}"));
-        }
+        GameSession session = RequireSession(request.ReceiverId);
 
         switch (request.BuddyCase) {
             case BuddyRequest.BuddyOneofCase.Invite:

@@ -19,9 +19,14 @@ public static class BlackMarketPacket {
         Preview = 8,
     }
 
-    public static ByteWriter Error(BlackMarketError error, int arg1 = 0, int arg2 = 0) {
+    private static ByteWriter Start(Command command) {
         var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Error);
+        pWriter.Write<Command>(command);
+        return pWriter;
+    }
+
+    public static ByteWriter Error(BlackMarketError error, int arg1 = 0, int arg2 = 0) {
+        var pWriter = Start(Command.Error);
         pWriter.WriteByte();
         pWriter.Write<BlackMarketError>(error);
         pWriter.WriteLong();
@@ -32,8 +37,7 @@ public static class BlackMarketPacket {
     }
 
     public static ByteWriter MyListings(ICollection<BlackMarketListing> listings) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.MyListings);
+        var pWriter = Start(Command.MyListings);
         pWriter.WriteInt(listings.Count);
         foreach (BlackMarketListing listing in listings) {
             pWriter.WriteClass<BlackMarketListing>(listing);
@@ -43,16 +47,14 @@ public static class BlackMarketPacket {
     }
 
     public static ByteWriter Add(BlackMarketListing listing) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Add);
+        var pWriter = Start(Command.Add);
         pWriter.WriteClass<BlackMarketListing>(listing);
 
         return pWriter;
     }
 
     public static ByteWriter Remove(long listingId) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Remove);
+        var pWriter = Start(Command.Remove);
         pWriter.WriteLong(listingId);
         pWriter.WriteByte();
 
@@ -60,8 +62,7 @@ public static class BlackMarketPacket {
     }
 
     public static ByteWriter Search(ICollection<BlackMarketListing> listings) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Search);
+        var pWriter = Start(Command.Search);
         pWriter.WriteInt(listings.Count);
         foreach (BlackMarketListing listing in listings) {
             pWriter.WriteClass<BlackMarketListing>(listing);
@@ -71,8 +72,7 @@ public static class BlackMarketPacket {
     }
 
     public static ByteWriter Purchase(long listingId, int amount) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Purchase);
+        var pWriter = Start(Command.Purchase);
         pWriter.WriteLong(listingId);
         pWriter.WriteInt(amount);
 
@@ -80,15 +80,13 @@ public static class BlackMarketPacket {
     }
 
     public static ByteWriter PurchaseResponse() {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.PurchaseResponse);
+        var pWriter = Start(Command.PurchaseResponse);
 
         return pWriter;
     }
 
     public static ByteWriter Preview(int itemId, int rarity, long npcPrice) {
-        var pWriter = Packet.Of(SendOp.BlackMarket);
-        pWriter.Write<Command>(Command.Preview);
+        var pWriter = Start(Command.Preview);
         pWriter.WriteInt(itemId);
         pWriter.WriteInt(rarity);
         pWriter.WriteLong(npcPrice);

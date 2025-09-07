@@ -61,14 +61,9 @@ public partial class ChannelService {
     }
 
     private GuildResponse GuildInviteReply(IEnumerable<long> receiverIds, GuildRequest.Types.InviteReply reply) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Send(GuildPacket.NotifyInvite(reply.Name, (GuildInvite.Response) reply.Reply));
-        }
-
+        ForEachSession(receiverIds, (_, session) =>
+            session.Send(GuildPacket.NotifyInvite(reply.Name, (GuildInvite.Response) reply.Reply))
+        );
         return new GuildResponse();
     }
 
@@ -77,46 +72,30 @@ public partial class ChannelService {
             return new GuildResponse { Error = (int) GuildError.s_guild_err_fail_addmember };
         }
 
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            // Intentionally create a separate GuildMember instance for each session.
-            session.Guild.AddMember(add.RequestorName, new GuildMember {
-                GuildId = guildId,
-                Info = info.Clone(),
-                Rank = (byte) add.Rank,
-                JoinTime = add.JoinTime,
-            });
-        }
+        ForEachSession(receiverIds, (_, session) => session.Guild.AddMember(add.RequestorName, new GuildMember {
+            GuildId = guildId,
+            Info = info.Clone(),
+            Rank = (byte) add.Rank,
+            JoinTime = add.JoinTime,
+        }));
 
         return new GuildResponse();
     }
 
     private GuildResponse RemoveGuildMember(IEnumerable<long> receiverIds, GuildRequest.Types.RemoveMember remove) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(receiverIds, (characterId, session) => {
             if (characterId == remove.CharacterId) {
                 session.Send(GuildPacket.NotifyExpel(remove.RequestorName));
                 session.Guild.RemoveGuild();
             } else {
                 session.Guild.RemoveMember(remove.CharacterId, remove.RequestorName);
             }
-        }
-
+        });
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildMember(IEnumerable<long> receiverIds, GuildRequest.Types.UpdateMember update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
+        ForEachSession(receiverIds, (_, session) => {
             if (update.HasRank) {
                 session.Guild.UpdateMemberRank(update.RequestorId, update.CharacterId, (byte) update.Rank);
             }
@@ -126,74 +105,38 @@ public partial class ChannelService {
             if (update.HasContribution || update.HasCheckInTime) {
                 session.Guild.UpdateMemberContribution(update.CharacterId, update.CheckInTime, update.Contribution);
             }
-        }
-
+        });
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildContribution(IEnumerable<long> receiverIds, GuildRequest.Types.UpdateContribution guild) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Guild.UpdateGuildExpFunds(guild.ContributorId, guild.GuildExp, guild.GuildFund);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Guild.UpdateGuildExpFunds(guild.ContributorId, guild.GuildExp, guild.GuildFund));
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildLeader(IEnumerable<long> receiverIds, GuildRequest.Types.UpdateLeader update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Guild.UpdateLeader(update.OldLeaderId, update.NewLeaderId);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Guild.UpdateLeader(update.OldLeaderId, update.NewLeaderId));
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildNotice(IEnumerable<long> receiverIds, GuildRequest.Types.UpdateNotice update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Guild.UpdateNotice(update.RequestorName, update.Message);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Guild.UpdateNotice(update.RequestorName, update.Message));
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildEmblem(IEnumerable<long> receiverIds, GuildRequest.Types.UpdateEmblem update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Guild.UpdateEmblem(update.RequestorName, update.Emblem);
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Guild.UpdateEmblem(update.RequestorName, update.Emblem));
         return new GuildResponse();
     }
 
     private GuildResponse UpdateGuildPoster(IEnumerable<long> receiverIds, GuildRequest.Types.UpdatePoster update) {
-        foreach (long characterId in receiverIds) {
-            if (!server.GetSession(characterId, out GameSession? session)) {
-                continue;
-            }
-
-            session.Guild.AddOrUpdatePoster(new GuildPoster {
-                Id = update.Id,
-                Picture = update.Picture,
-                OwnerId = update.OwnerId,
-                OwnerName = update.OwnerName,
-                ResourceId = update.ResourceId,
-            });
-        }
-
+        ForEachSession(receiverIds, (_, session) => session.Guild.AddOrUpdatePoster(new GuildPoster {
+            Id = update.Id,
+            Picture = update.Picture,
+            OwnerId = update.OwnerId,
+            OwnerName = update.OwnerName,
+            ResourceId = update.ResourceId,
+        }));
         return new GuildResponse();
     }
 }

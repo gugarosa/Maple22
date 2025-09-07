@@ -36,9 +36,14 @@ public static class ClubPacket {
         Join = 30,
     }
 
-    public static ByteWriter Update(Club club) {
+    private static ByteWriter Start(Command command) {
         var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.UpdateClub);
+        pWriter.Write<Command>(command);
+        return pWriter;
+    }
+
+    public static ByteWriter Update(Club club) {
+        var pWriter = Start(Command.UpdateClub);
         pWriter.WriteClass<Club>(club);
         pWriter.WriteByte((byte) club.Members.Count);
         foreach (ClubMember member in club.Members.Values) {
@@ -49,8 +54,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Establish(Club club) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Establish);
+        var pWriter = Start(Command.Establish);
         pWriter.WriteLong(club.Id);
         pWriter.WriteUnicodeString(club.Name);
 
@@ -58,8 +62,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Create(Club club) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Create);
+        var pWriter = Start(Command.Create);
         pWriter.WriteClass<Club>(club);
         pWriter.WriteByte((byte) club.Members.Count);
         foreach (ClubMember member in club.Members.Values) {
@@ -70,8 +73,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter DeleteStagedClub(long clubId, ClubResponse reply) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.DeleteStagedClub);
+        var pWriter = Start(Command.DeleteStagedClub);
         pWriter.WriteLong(clubId);
         pWriter.Write<ClubResponse>(reply);
 
@@ -79,8 +81,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Invited(long clubId, string playerName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Invited);
+        var pWriter = Start(Command.Invited);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(playerName);
 
@@ -88,16 +89,14 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Invite(ClubInvite invite) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Invite);
+        var pWriter = Start(Command.Invite);
         pWriter.WriteClass<ClubInvite>(invite);
 
         return pWriter;
     }
 
     public static ByteWriter AcceptInvite(ClubInvite invite) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.AcceptInvite);
+        var pWriter = Start(Command.AcceptInvite);
         pWriter.WriteClass<ClubInvite>(invite);
         pWriter.WriteInt();
 
@@ -105,8 +104,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter InviteNotification(long clubId, string invitee, bool accept) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.InviteNotification);
+        var pWriter = Start(Command.InviteNotification);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(invitee);
         pWriter.WriteBool(accept);
@@ -116,8 +114,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter UpdateMember(ClubMember member) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.UpdateMember);
+        var pWriter = Start(Command.UpdateMember);
         pWriter.WriteLong(member.ClubId);
         pWriter.WriteUnicodeString(member.Name);
         ClubMember.WriteInfo(pWriter, member);
@@ -126,8 +123,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Rename(long clubId, string clubName, long timestamp) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Rename);
+        var pWriter = Start(Command.Rename);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(clubName);
         pWriter.WriteLong(timestamp);
@@ -136,8 +132,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Leave(long clubId, string playerName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Leave);
+        var pWriter = Start(Command.Leave);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(playerName);
 
@@ -145,8 +140,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter StagedClubInviteReply(long clubId, ClubResponse reply, string name) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.StagedClubInviteReply);
+        var pWriter = Start(Command.StagedClubInviteReply);
         pWriter.WriteLong(clubId);
         pWriter.Write<ClubResponse>(reply);
         pWriter.WriteUnicodeString(name);
@@ -155,8 +149,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Disband(long clubId, string leaderName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Disband);
+        var pWriter = Start(Command.Disband);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(leaderName);
         pWriter.Write<ClubResponse>(ClubResponse.Disband);
@@ -165,8 +158,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter NotifyAcceptInvite(ClubMember member, string leaderName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.NotifyAcceptInvite);
+        var pWriter = Start(Command.NotifyAcceptInvite);
         pWriter.WriteLong(member.ClubId);
         pWriter.WriteUnicodeString(leaderName);
         pWriter.WriteClass<ClubMember>(member);
@@ -175,8 +167,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter LeaveNotice(long clubId, string playerName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.LeaveNotice);
+        var pWriter = Start(Command.LeaveNotice);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(playerName);
 
@@ -184,8 +175,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter NotifyLogin(long clubId, string memberName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.NotifyLogin);
+        var pWriter = Start(Command.NotifyLogin);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(memberName);
 
@@ -193,8 +183,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter NotifyLogout(long clubId, string memberName, long lastLoginTime) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.NotifyLogout);
+        var pWriter = Start(Command.NotifyLogout);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(memberName);
         pWriter.WriteLong(lastLoginTime);
@@ -203,8 +192,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter UpdateLeader(long clubId, string oldLeader, string newLeader) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.UpdateLeader);
+        var pWriter = Start(Command.UpdateLeader);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(oldLeader);
         pWriter.WriteUnicodeString(newLeader);
@@ -214,8 +202,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter UpdateMemberMap(long clubId, string memberName, int mapId) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.UpdateMemberMap);
+        var pWriter = Start(Command.UpdateMemberMap);
         pWriter.WriteLong(clubId);
         pWriter.WriteUnicodeString(memberName);
         pWriter.WriteInt(mapId);
@@ -224,8 +211,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter UpdateMemberName(string oldName, string newName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.UpdateMemberName);
+        var pWriter = Start(Command.UpdateMemberName);
         pWriter.WriteUnicodeString(oldName);
         pWriter.WriteUnicodeString(newName);
 
@@ -233,8 +219,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Error(ClubError error) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.ErrorNotice);
+        var pWriter = Start(Command.ErrorNotice);
         pWriter.WriteByte(1);
         pWriter.Write<ClubError>(error);
 
@@ -242,8 +227,7 @@ public static class ClubPacket {
     }
 
     public static ByteWriter Join(ClubMember member, string clubName) {
-        var pWriter = Packet.Of(SendOp.Club);
-        pWriter.Write<Command>(Command.Join);
+        var pWriter = Start(Command.Join);
         pWriter.WriteLong(member.ClubId);
         pWriter.WriteUnicodeString(member.Name);
         pWriter.WriteUnicodeString(clubName);

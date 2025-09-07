@@ -85,17 +85,21 @@ public static class GuildPacket {
         // 114, 115, 116, 119, 120
     }
 
-    public static ByteWriter Load(Guild guild) {
+    private static ByteWriter Start(Command command) {
         var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.Load);
+        pWriter.Write<Command>(command);
+        return pWriter;
+    }
+
+    public static ByteWriter Load(Guild guild) {
+        var pWriter = Start(Command.Load);
         pWriter.WriteClass<Guild>(guild);
 
         return pWriter;
     }
 
     public static ByteWriter Created(string guildName) {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.Created);
+        var pWriter = Start(Command.Created);
         pWriter.Write<GuildError>(GuildError.none);
         pWriter.WriteUnicodeString(guildName);
 
@@ -103,24 +107,21 @@ public static class GuildPacket {
     }
 
     public static ByteWriter Disbanded() {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.Disbanded);
+        var pWriter = Start(Command.Disbanded);
         pWriter.Write<GuildError>(GuildError.none);
 
         return pWriter;
     }
 
     public static ByteWriter Invited(string playerName) {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.Invited);
+        var pWriter = Start(Command.Invited);
         pWriter.WriteUnicodeString(playerName);
 
         return pWriter;
     }
 
     public static ByteWriter InviteInfo(GuildInvite info) {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.InviteInfo);
+        var pWriter = Start(Command.InviteInfo);
         pWriter.WriteClass<GuildInvite>(info);
 
         return pWriter;
@@ -131,8 +132,7 @@ public static class GuildPacket {
     // s_guild_join_reject
     // - You have rejected the guild invitation from {0}.
     public static ByteWriter InviteReply(GuildInvite info, bool accept) {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.InviteReply);
+        var pWriter = Start(Command.InviteReply);
         pWriter.WriteClass<GuildInvite>(info);
         pWriter.WriteBool(accept);
 
@@ -140,8 +140,7 @@ public static class GuildPacket {
     }
 
     public static ByteWriter NotifyInvite(string name, GuildInvite.Response response) {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.NotifyInvite);
+        var pWriter = Start(Command.NotifyInvite);
         pWriter.WriteUnicodeString(name);
         pWriter.WriteBool(response == GuildInvite.Response.Accept);
         pWriter.Write<GuildInvite.Response>(response);
@@ -152,8 +151,7 @@ public static class GuildPacket {
     // s_guild_leave
     // - You have left {0}.
     public static ByteWriter Leave() {
-        var pWriter = Packet.Of(SendOp.Guild);
-        pWriter.Write<Command>(Command.Leave);
+        var pWriter = Start(Command.Leave);
 
         return pWriter;
     }
