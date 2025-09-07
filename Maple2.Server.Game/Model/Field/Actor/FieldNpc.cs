@@ -367,11 +367,11 @@ public class FieldNpc : Actor<Npc> {
             // If this drop is Mesos, override the amount using NPC level-based roll
             if (item.IsMeso()) {
                 int level = Value.Metadata.Basic.Level;
-                float min = ConfigProvider.Settings.Loot.MesosPerLevelMin;
-                float max = Math.Max(min, ConfigProvider.Settings.Loot.MesosPerLevelMax);
+                float min = ConfigProvider.Settings.Mesos.PerLevelMin;
+                float max = Math.Max(min, ConfigProvider.Settings.Mesos.PerLevelMax);
                 double factor = min + (max - min) * Random.Shared.NextDouble();
                 double raw = level * factor;
-                int meso = (int) Math.Round(raw * ConfigProvider.Settings.Loot.MesosDropRate);
+                int meso = (int) Math.Round(raw * ConfigProvider.Settings.Mesos.DropRate);
                 if (meso <= 0) {
                     continue;
                 }
