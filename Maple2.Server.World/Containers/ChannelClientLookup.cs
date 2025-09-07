@@ -120,6 +120,24 @@ public class ChannelClientLookup : IEnumerable<(int, ChannelClient)> {
             int newGamePort = Target.BaseGamePort + channelId;
             int newGrpcChannelPort = Target.BaseGrpcChannelPort + channelId;
 
+            // If a channel entry for this ID already exists and matches the same IP/content type,
+            // prefer reusing it instead of allocating a new ID. Wait briefly for it to go Inactive.
+            if (channels.TryGetValue(channelId, out Channel? existing) &&
+                existing.InstancedContent == instancedContent &&
+                existing.Endpoint.Address.ToString() == gameIp) {
+                const int maxWaitMs = 8000; // keep short to avoid blocking startup too long
+                const int sleepMs = 200;
+                int waited = 0;
+                while (existing.Status is ChannelStatus.Active or ChannelStatus.Pending && waited < maxWaitMs) {
+                    Thread.Sleep(sleepMs);
+                    waited += sleepMs;
+                }
+                if (existing.Status is ChannelStatus.Inactive) {
+                    existing.Status = ChannelStatus.Pending;
+                    return ((ushort)newGamePort, newGrpcChannelPort, channelId);
+                }
+            }
+
             IPAddress ipAddress = IPAddress.Parse(gameIp);
             IPEndPoint gameEndpoint = new IPEndPoint(ipAddress, newGamePort);
 
