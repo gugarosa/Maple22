@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 using Maple2.Model.Enum;
+using Maple2.Model;
 using Maple2.Model.Game;
 using Maple2.Model.Metadata;
 using Maple2.Server.Game.Manager.Field;
@@ -13,6 +14,7 @@ using Maple2.Server.Game.Session;
 using static Maple2.Server.Game.Model.ActorStateComponent.TaskState;
 using Maple2.Server.Game.Model.Enum;
 using Maple2.Server.Core.Packets;
+using Maple2.Server.Core.Config;
 using DotRecast.Detour.Crowd;
 using Maple2.Server.Game.Model.ActorStateComponent;
 using MovementState = Maple2.Server.Game.Model.ActorStateComponent.MovementState;
@@ -361,6 +363,19 @@ public class FieldNpc : Actor<Npc> {
         }
 
         foreach (Item item in itemDrops) {
+            // If this drop is Mesos, override the amount using NPC level-based roll
+            if (item.IsMeso()) {
+                int level = Value.Metadata.Basic.Level;
+                float min = ConfigProvider.Settings.Loot.MesosPerLevelMin;
+                float max = Math.Max(min, ConfigProvider.Settings.Loot.MesosPerLevelMax);
+                double factor = min + (max - min) * Random.Shared.NextDouble();
+                double raw = level * factor;
+                int meso = (int) Math.Round(raw * ConfigProvider.Settings.Loot.MesosDropRate);
+                if (meso <= 0) {
+                    continue;
+                }
+                item.Amount = meso;
+            }
             float x = Random.Shared.Next((int) Position.X - Value.Metadata.DropInfo.DropDistanceRandom, (int) Position.X + Value.Metadata.DropInfo.DropDistanceRandom);
             float y = Random.Shared.Next((int) Position.Y - Value.Metadata.DropInfo.DropDistanceRandom, (int) Position.Y + Value.Metadata.DropInfo.DropDistanceRandom);
             var position = new Vector3(x, y, Position.Z);

@@ -33,6 +33,8 @@ public sealed class ServerSettings {
         public float BossDropRate { get; init; } = 1.0f;
         public float RareDropRate { get; init; } = 1.0f;
         public float MesosDropRate { get; init; } = 1.0f;
+        public float MesosPerLevelMin { get; init; } = 1.0f;
+        public float MesosPerLevelMax { get; init; } = 3.0f;
     }
 
     public sealed class DifficultySection {

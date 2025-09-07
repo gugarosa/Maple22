@@ -307,13 +307,24 @@ public class ItemDropManager {
             }
         }
 
-        // Scale meso pouch amounts by loot.mesos_drop_rate before item is created.
+        // For meso currency, scale drop count and convert to actual meso value using item sell price
         if (itemId is >= 90000001 and <= 90000003 && amount > 0) {
             int scaled = (int) Math.Round(amount * ConfigProvider.Settings.Loot.MesosDropRate);
             if (scaled <= 0) {
                 return null;
             }
-            amount = scaled;
+            long pouchValue = 1;
+            long[] sell = itemMetadata.Property.CustomSellPrices?.Length > 0
+                ? itemMetadata.Property.CustomSellPrices
+                : itemMetadata.Property.SellPrices;
+            if (sell != null && sell.Length > 0 && sell[0] > 0) {
+                pouchValue = sell[0];
+            }
+            long total = scaled * pouchValue;
+            if (total > int.MaxValue) {
+                total = int.MaxValue;
+            }
+            amount = (int) total;
         }
 
         var item = new Item(itemMetadata, rarity, amount);

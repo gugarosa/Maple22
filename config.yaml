@@ -18,6 +18,8 @@ loot:
   boss_drop_rate: 1.0
   rare_drop_rate: 1.0
   mesos_drop_rate: 10.0
+  mesos_per_level_min: 1.0
+  mesos_per_level_max: 3.0
 
 difficulty:
   damage_dealt_rate: 1.0
