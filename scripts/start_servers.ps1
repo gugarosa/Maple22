@@ -3,7 +3,8 @@
 param(
   [int[]]$NonInstancedChannels,
   [switch]$IncludeInstanced,
-  [switch]$NoBuild
+  [switch]$NoBuild,
+  [switch]$GameOnly
 )
 
 Set-StrictMode -Version Latest
@@ -81,31 +82,44 @@ if (-not $PSBoundParameters.ContainsKey('IncludeInstanced')) {
   $IncludeInstanced = $true
 }
 
+$gameServices = @()
+if ($IncludeInstanced) { $gameServices += 'game-ch0' }
+foreach ($ch in $NonInstancedChannels) { $gameServices += "game-ch$ch" }
+
 if (-not $NoBuild) {
-  Write-Host "Building images..."
-  Compose build --pull
+  if ($GameOnly) {
+    if ($gameServices.Count -eq 0) { $gameServices = @('game-ch0') }
+    Write-Host "Building game images only: $($gameServices -join ', ')"
+    Compose @('build','--pull') + $gameServices
+  } else {
+    Write-Host "Building images..."
+    Compose build --pull
+  }
 }
 
-Write-Host "Starting database..."
-Compose @('up','--detach','mysql')
-Wait-Healthy -Service mysql -TimeoutSec 300
+if (-not $GameOnly) {
+  Write-Host "Starting database..."
+  Compose @('up','--detach','mysql')
+  Wait-Healthy -Service mysql -TimeoutSec 300
 
-Write-Host "Starting world, login, and web..."
-Compose @('up','--detach','world','login','web')
-Wait-Healthy -Service world -TimeoutSec 300
-Wait-Healthy -Service login -TimeoutSec 300
+  Write-Host "Starting world, login, and web..."
+  Compose @('up','--detach','world','login','web')
+  Wait-Healthy -Service world -TimeoutSec 300
+  Wait-Healthy -Service login -TimeoutSec 300
+} else {
+  Write-Host "Game-only mode: skipping database/world/login/web startup."
+}
 
 Write-Host "Starting game channels..."
 $started = @()
-if ($IncludeInstanced) {
-  Compose @('up','--detach','game-ch0')
-  $null = Wait-Healthy -Service game-ch0 -TimeoutSec 300 -Soft
-  $started += 'game-ch0'
-}
+if ($gameServices.Count -eq 0) { $gameServices = @('game-ch0') }
 
-foreach ($ch in $NonInstancedChannels) {
-  $svc = "game-ch$ch"
-  Compose @('up','--detach',$svc)
+$upArgs = @('up','--detach')
+if ($GameOnly) { $upArgs += @('--no-deps','--force-recreate') }
+if (-not $NoBuild -and $UseV2) { $upArgs += '--build' }
+
+foreach ($svc in $gameServices) {
+  Compose ($upArgs + $svc)
   $null = Wait-Healthy -Service $svc -TimeoutSec 300 -Soft
   $started += $svc
 }
@@ -114,6 +128,10 @@ Write-Host
 Compose ps
 Write-Host
 Write-Host "All services started. Tail logs with:"
-$joined = ($started + @('world','login')) -join ' '
+if ($GameOnly) {
+  $joined = ($started) -join ' '
+} else {
+  $joined = ($started + @('world','login')) -join ' '
+}
 if ($UseV2) { Write-Host "  docker compose logs -f $joined" }
 else { Write-Host "  docker-compose logs -f $joined" }
