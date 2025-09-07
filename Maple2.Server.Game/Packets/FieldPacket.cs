@@ -161,7 +161,7 @@ public static class FieldPacket {
 
         pWriter.WriteLong(); // uid for PetNpc
         pWriter.WriteByte();
-        pWriter.WriteInt(npc.Value.Metadata.Basic.Level);
+        pWriter.WriteInt(npc.EffectiveLevel);
         pWriter.WriteInt();
 
         if (npc.Value.IsBoss) {

@@ -80,7 +80,8 @@ public sealed class ExperienceManager {
         // TODO: Using table ID 2. Need confirmation if particular maps (or dungeons) use a different table
         long expGained = fieldNpc.Value.Metadata.Basic.CustomExp;
         if (fieldNpc.Value.Metadata.Basic.CustomExp < 0) {
-            if (!session.TableMetadata.ExpTable.ExpBase.TryGetValue(2, fieldNpc.Value.Metadata.Basic.Level, out expGained)) {
+            int mobLevel = fieldNpc.EffectiveLevel;
+            if (!session.TableMetadata.ExpTable.ExpBase.TryGetValue(2, mobLevel, out expGained)) {
                 return;
             }
         }

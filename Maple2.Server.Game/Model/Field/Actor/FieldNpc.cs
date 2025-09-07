@@ -87,6 +87,7 @@ public class FieldNpc : Actor<Npc> {
     public readonly SkillMetadata?[] Skills;
 
     public int SpawnPointId = 0;
+    public int EffectiveLevel => Math.Max(1, Value.Metadata.Basic.Level + ConfigProvider.Settings.Difficulty.EnemyLevelOffset);
 
     public MS2PatrolData? Patrol { get; private set; }
     private int currentWaypointIndex;
