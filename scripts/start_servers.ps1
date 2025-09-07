@@ -36,7 +36,7 @@ function Wait-Healthy {
     $status = ("$statusRaw" | Out-String).Trim().ToLowerInvariant()
 
     if ($status -match 'healthy') {
-      Write-Host "OK: $Service is healthy"
+      Write-Host "$Service is healthy"
       return $true
     } elseif ($status -match '^(running|starting|created)$') {
     } elseif ($status -match 'exited') {

@@ -7,12 +7,6 @@ rates:
     prestige: 1.0
     mastery: 1.0
 
-economy:
-  repair_cost_rate: 1.0
-  enchant_cost_rate: 1.0
-  travel_fee_rate: 10.0
-  market_tax_rate: 1.0
-
 loot:
   global_drop_rate: 1.0
   boss_drop_rate: 1.0

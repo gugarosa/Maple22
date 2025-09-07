@@ -90,7 +90,6 @@ Use `config.yaml` in the repo root (or set `CONFIG_PATH`). All keys are optional
 - Rates:
   - EXP: `rates.exp.global`, `rates.exp.kill`, `rates.exp.quest`, `rates.exp.dungeon`, `rates.exp.prestige`, `rates.exp.mastery`
 - Loot: `loot.global_drop_rate`, `loot.boss_drop_rate`, `loot.rare_drop_rate`, `loot.mesos_drop_rate`
-- Economy: `economy.repair_cost_rate`, `economy.enchant_cost_rate`, `economy.travel_fee_rate`, `economy.market_tax_rate`
 - Difficulty: `difficulty.damage_dealt_rate`, `difficulty.damage_taken_rate`, `difficulty.enemy_hp_scale`, `difficulty.enemy_level_offset`
 
 Example `config.yaml` snippet:

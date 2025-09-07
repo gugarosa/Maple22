@@ -4,7 +4,6 @@ namespace Maple2.Server.Core.Config;
 
 public sealed class ServerSettings {
     public RatesSection Rates { get; init; } = new();
-    public EconomySection Economy { get; init; } = new();
     public LootSection Loot { get; init; } = new();
     public DifficultySection Difficulty { get; init; } = new();
 
@@ -21,12 +20,6 @@ public sealed class ServerSettings {
         }
     }
 
-    public sealed class EconomySection {
-        public float RepairCostRate { get; init; } = 1.0f;
-        public float EnchantCostRate { get; init; } = 1.0f;
-        public float TravelFeeRate { get; init; } = 1.0f;
-        public float MarketTaxRate { get; init; } = 1.0f;
-    }
 
     public sealed class LootSection {
         public float GlobalDropRate { get; init; } = 1.0f;
