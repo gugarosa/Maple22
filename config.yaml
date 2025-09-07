@@ -1,22 +1,24 @@
-rates:
-  exp:
-    global: 10.0
-    kill: 1.0
-    quest: 1.0
-    dungeon: 1.0
-    prestige: 1.0
-    mastery: 1.0
+exp:
+  global: 10.0
+  kill: 1.0
+  quest: 1.0
+  dungeon: 1.0
+  prestige: 1.0
+  mastery: 1.0
 
 loot:
   global_drop_rate: 1.0
   boss_drop_rate: 1.0
   rare_drop_rate: 1.0
-  mesos_drop_rate: 1.0
-  mesos_per_level_min: 1.0
-  mesos_per_level_max: 3.0
+
+mesos:
+  drop_rate: 1.0
+  per_level_min: 1.0
+  per_level_max: 3.0
 
 difficulty:
   damage_dealt_rate: 1.0
   damage_taken_rate: 1.0
   enemy_hp_scale: 1.0
   enemy_level_offset: 0
+

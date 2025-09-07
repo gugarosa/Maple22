@@ -85,22 +85,25 @@ In game-only mode the script uses `docker compose up --no-deps --force-recreate`
 
 ## Server Configuration
 
-Use `config.yaml` in the repo root (or set `CONFIG_PATH`). All keys are optional; defaults are 1.0.
+Use `config.yaml` in the repo root (or set `CONFIG_PATH`). All keys are optional.
 
-- Rates:
-  - EXP: `rates.exp.global`, `rates.exp.kill`, `rates.exp.quest`, `rates.exp.dungeon`, `rates.exp.prestige`, `rates.exp.mastery`
-- Loot: `loot.global_drop_rate`, `loot.boss_drop_rate`, `loot.rare_drop_rate`, `loot.mesos_drop_rate`
+- Exp: `exp.global`, `exp.kill`, `exp.quest`, `exp.dungeon`, `exp.prestige`, `exp.mastery`
+- Loot: `loot.global_drop_rate`, `loot.boss_drop_rate`, `loot.rare_drop_rate`
+- Mesos: `mesos.drop_rate`, `mesos.per_level_min`, `mesos.per_level_max`
 - Difficulty: `difficulty.damage_dealt_rate`, `difficulty.damage_taken_rate`, `difficulty.enemy_hp_scale`, `difficulty.enemy_level_offset`
 
 Example `config.yaml` snippet:
 
 ```
-rates:
-  exp:
-    global: 2.0
-    kill: 2.0
-    quest: 1.5
+exp:
+  global: 2.0
+  kill: 2.0
+  quest: 1.5
 loot:
   global_drop_rate: 1.5
-  mesos_drop_rate: 10.0
+mesos:
+  drop_rate: 2.0
+  per_level_min: 1.0
+  per_level_max: 3.0
 ```
+

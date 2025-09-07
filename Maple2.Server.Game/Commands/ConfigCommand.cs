@@ -7,11 +7,12 @@ using Maple2.Model.Enum;
 
 namespace Maple2.Server.Game.Commands;
 
-public class RatesCommand : GameCommand {
-    public RatesCommand(GameSession session) : base(AdminPermissions.Debug, "rates", "Show or change runtime rates.") {
+public class ConfigCommand : GameCommand {
+    public ConfigCommand(GameSession session) : base(AdminPermissions.Debug, "config", "Show or change runtime configuration.") {
         AddCommand(new ShowCommand());
         AddCommand(new ExpCommand());
         AddCommand(new LootCommand());
+        AddCommand(new MesosCommand());
         AddCommand(new DifficultyCommand());
     }
 
@@ -22,7 +23,7 @@ public class RatesCommand : GameCommand {
 
         private void Handle(InvocationContext ctx) {
             var s = ConfigProvider.Settings;
-            ctx.Console.Out.WriteLine($"Rates:\n  EXP: global={s.Rates.Exp.Global:0.##}, kill={s.Rates.Exp.Kill:0.##}, quest={s.Rates.Exp.Quest:0.##}, dungeon={s.Rates.Exp.Dungeon:0.##}, prestige={s.Rates.Exp.Prestige:0.##}, mastery={s.Rates.Exp.Mastery:0.##}\n  Loot: global={s.Loot.GlobalDropRate:0.##}, boss={s.Loot.BossDropRate:0.##}, rare={s.Loot.RareDropRate:0.##}, mesos={s.Loot.MesosDropRate:0.##} (perLevel {s.Loot.MesosPerLevelMin:0.##}-{s.Loot.MesosPerLevelMax:0.##})\n  Difficulty: dealt={s.Difficulty.DamageDealtRate:0.##}, taken={s.Difficulty.DamageTakenRate:0.##}, enemyHp={s.Difficulty.EnemyHpScale:0.##}, enemyLvlOffset={s.Difficulty.EnemyLevelOffset}");
+            ctx.Console.Out.WriteLine($"Rates:\n  EXP: global={s.Exp.Global:0.##}, kill={s.Exp.Kill:0.##}, quest={s.Exp.Quest:0.##}, dungeon={s.Exp.Dungeon:0.##}, prestige={s.Exp.Prestige:0.##}, mastery={s.Exp.Mastery:0.##}\n  Loot: global={s.Loot.GlobalDropRate:0.##}, boss={s.Loot.BossDropRate:0.##}, rare={s.Loot.RareDropRate:0.##}\n  Mesos: drop={s.Mesos.DropRate:0.##} (perLevel {s.Mesos.PerLevelMin:0.##}-{s.Mesos.PerLevelMax:0.##})\n  Difficulty: dealt={s.Difficulty.DamageDealtRate:0.##}, taken={s.Difficulty.DamageTakenRate:0.##}, enemyHp={s.Difficulty.EnemyHpScale:0.##}, enemyLvlOffset={s.Difficulty.EnemyLevelOffset}");
         }
     }
 
@@ -38,7 +39,7 @@ public class RatesCommand : GameCommand {
         private void Handle(InvocationContext ctx, string key, float value) {
             key = key.ToLowerInvariant();
             if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; }
-            var exp = ConfigProvider.Settings.Rates.Exp;
+            var exp = ConfigProvider.Settings.Exp;
             switch (key) {
                 case "global": exp.Global = value; break;
                 case "kill": exp.Kill = value; break;
@@ -54,7 +55,7 @@ public class RatesCommand : GameCommand {
 
     private class LootCommand : Command {
         public LootCommand() : base("loot", "Set loot rates.") {
-            var key = new Argument<string>("key", () => "global", "Rate key: global|boss|rare|mesos|min|max");
+            var key = new Argument<string>("key", () => "global", "Rate key: global|boss|rare");
             var value = new Argument<float>("value", description: "New multiplier/value");
             AddArgument(key);
             AddArgument(value);
@@ -69,12 +70,32 @@ public class RatesCommand : GameCommand {
                 case "global": loot.GlobalDropRate = value; break;
                 case "boss": loot.BossDropRate = value; break;
                 case "rare": loot.RareDropRate = value; break;
-                case "mesos": loot.MesosDropRate = value; break;
-                case "min": loot.MesosPerLevelMin = value; break;
-                case "max": loot.MesosPerLevelMax = value; break;
-                default: ctx.Console.Error.WriteLine("Unknown key. Use: global|boss|rare|mesos|min|max"); return;
+                default: ctx.Console.Error.WriteLine("Unknown key. Use: global|boss|rare"); return;
             }
             ctx.Console.Out.WriteLine($"Loot {key} set to {value:0.##} (runtime only)");
+        }
+    }
+
+    private class MesosCommand : Command {
+        public MesosCommand() : base("mesos", "Set mesos rates.") {
+            var key = new Argument<string>("key", () => "drop", "Key: drop|min|max");
+            var value = new Argument<float>("value", description: "New multiplier/value");
+            AddArgument(key);
+            AddArgument(value);
+            this.SetHandler<InvocationContext, string, float>(Handle, key, value);
+        }
+
+        private void Handle(InvocationContext ctx, string key, float value) {
+            key = key.ToLowerInvariant();
+            if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; }
+            var mesos = ConfigProvider.Settings.Mesos;
+            switch (key) {
+                case "drop": mesos.DropRate = value; break;
+                case "min": mesos.PerLevelMin = value; break;
+                case "max": mesos.PerLevelMax = value; break;
+                default: ctx.Console.Error.WriteLine("Unknown key. Use: drop|min|max"); return;
+            }
+            ctx.Console.Out.WriteLine($"Mesos {key} set to {value:0.##} (runtime only)");
         }
     }
 
@@ -101,4 +122,3 @@ public class RatesCommand : GameCommand {
         }
     }
 }
-
