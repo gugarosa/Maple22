@@ -8,33 +8,33 @@ public sealed class ServerSettings {
     public DifficultySection Difficulty { get; init; } = new();
 
     public sealed class RatesSection {
-        public ExpRates Exp { get; init; } = new();
+        public ExpRates Exp { get; set; } = new();
 
         public sealed class ExpRates {
-            public float Global { get; init; } = 1.0f;
-            public float Kill { get; init; } = 1.0f;
-            public float Quest { get; init; } = 1.0f;
-            public float Dungeon { get; init; } = 1.0f;
-            public float Prestige { get; init; } = 1.0f;
-            public float Mastery { get; init; } = 1.0f;
+            public float Global { get; set; } = 1.0f;
+            public float Kill { get; set; } = 1.0f;
+            public float Quest { get; set; } = 1.0f;
+            public float Dungeon { get; set; } = 1.0f;
+            public float Prestige { get; set; } = 1.0f;
+            public float Mastery { get; set; } = 1.0f;
         }
     }
 
 
     public sealed class LootSection {
-        public float GlobalDropRate { get; init; } = 1.0f;
-        public float BossDropRate { get; init; } = 1.0f;
-        public float RareDropRate { get; init; } = 1.0f;
-        public float MesosDropRate { get; init; } = 1.0f;
-        public float MesosPerLevelMin { get; init; } = 1.0f;
-        public float MesosPerLevelMax { get; init; } = 3.0f;
+        public float GlobalDropRate { get; set; } = 1.0f;
+        public float BossDropRate { get; set; } = 1.0f;
+        public float RareDropRate { get; set; } = 1.0f;
+        public float MesosDropRate { get; set; } = 1.0f;
+        public float MesosPerLevelMin { get; set; } = 1.0f;
+        public float MesosPerLevelMax { get; set; } = 3.0f;
     }
 
     public sealed class DifficultySection {
-        public float DamageDealtRate { get; init; } = 1.0f;
-        public float DamageTakenRate { get; init; } = 1.0f;
-        public float EnemyHpScale { get; init; } = 1.0f;
-        public int EnemyLevelOffset { get; init; } = 0;
+        public float DamageDealtRate { get; set; } = 1.0f;
+        public float DamageTakenRate { get; set; } = 1.0f;
+        public float EnemyHpScale { get; set; } = 1.0f;
+        public int EnemyLevelOffset { get; set; } = 0;
     }
 }
 
