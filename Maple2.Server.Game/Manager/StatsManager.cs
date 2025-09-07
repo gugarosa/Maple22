@@ -3,6 +3,7 @@ using Maple2.Model.Enum;
 using Maple2.Model.Game;
 using Maple2.Model.Metadata;
 using Maple2.Server.Core.Formulas;
+using Maple2.Server.Core.Config;
 using Maple2.Server.Game.LuaFunctions;
 using Maple2.Server.Game.Model;
 using Maple2.Server.Game.Packets;
@@ -45,6 +46,18 @@ public class StatsManager {
 
         if (actor is FieldNpc npc) {
             Values = new Stats(npc.Value.Metadata.Stat);
+            float hpScale = ConfigProvider.Settings.Difficulty.EnemyHpScale;
+            if (hpScale != 1.0f) {
+                var health = Values[BasicAttribute.Health];
+                if (health.Total > 0) {
+                    long scaledTotal = (long) Math.Max(1, Math.Round(health.Total * hpScale));
+                    long scaledBase = (long) Math.Max(1, Math.Round(health.Base * hpScale));
+                    long scaledCurrent = (long) Math.Max(1, Math.Round(health.Current * hpScale));
+                    health.Total = scaledTotal;
+                    health.Base = scaledBase;
+                    health.Current = Math.Min(scaledCurrent, scaledTotal);
+                }
+            }
             return;
         }
 
