@@ -355,12 +355,21 @@ public class FieldNpc : Actor<Npc> {
         NpcMetadataDropInfo dropInfo = Value.Metadata.DropInfo;
 
         ICollection<Item> itemDrops = new List<Item>();
+        bool isBoss = false;
+        foreach (string tag in Value.Metadata.Basic.MainTags) {
+            if (tag.Contains("boss", StringComparison.OrdinalIgnoreCase)) { isBoss = true; break; }
+        }
+        if (!isBoss) {
+            foreach (string tag in Value.Metadata.Basic.SubTags) {
+                if (tag.Contains("boss", StringComparison.OrdinalIgnoreCase)) { isBoss = true; break; }
+            }
+        }
         foreach (int globalDropId in dropInfo.GlobalDropBoxIds) {
-            itemDrops = itemDrops.Concat(Field.ItemDrop.GetGlobalDropItems(globalDropId, Value.Metadata.Basic.Level)).ToList();
+            itemDrops = itemDrops.Concat(Field.ItemDrop.GetGlobalDropItems(globalDropId, Value.Metadata.Basic.Level, isBoss)).ToList();
         }
 
         foreach (int individualDropId in dropInfo.IndividualDropBoxIds) {
-            itemDrops = itemDrops.Concat(Field.ItemDrop.GetIndividualDropItems(firstPlayer.Session, Value.Metadata.Basic.Level, individualDropId)).ToList();
+            itemDrops = itemDrops.Concat(Field.ItemDrop.GetIndividualDropItems(firstPlayer.Session, Value.Metadata.Basic.Level, individualDropId, isBoss: isBoss)).ToList();
         }
 
         foreach (Item item in itemDrops) {
