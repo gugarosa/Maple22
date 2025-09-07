@@ -3,6 +3,7 @@ using Maple2.Model.Enum;
 using Maple2.Model.Game;
 using Maple2.Model.Metadata;
 using Maple2.Server.Game.LuaFunctions;
+using Maple2.Server.Core.Config;
 using Maple2.Server.Game.Model;
 using Maple2.Server.Game.Packets;
 using Maple2.Server.Game.Session;
@@ -83,7 +84,9 @@ public sealed class ExperienceManager {
                 return;
             }
         }
-        expGained += GetRestExp((long) (expGained * expRate));
+        float mult = ConfigProvider.Settings.ExpMultiplier(ExpType.monster);
+        long scaledBase = ScaleExp(expGained, mult);
+        expGained = scaledBase + GetRestExp((long) (scaledBase * expRate));
         LevelUp();
         session.Send(ExperienceUpPacket.Add(expGained, Exp, RestExp, ExpMessageCode.s_msg_take_exp, npc.ObjectId));
     }
@@ -95,16 +98,12 @@ public sealed class ExperienceManager {
         return addedRestExp;
     }
 
+    // Treats the provided amount as already scaled (final) EXP.
     public long AddExp(long expGained, ExpMessageCode message = ExpMessageCode.s_msg_take_exp) {
         if (expGained <= 0) {
             return 0;
         }
-        expGained += GetRestExp(expGained);
-        LevelUp();
-        AddPrestigeExp(message.Type());
-        session.Send(ExperienceUpPacket.Add(expGained, Exp, RestExp, message));
-        session.ConditionUpdate(ConditionType.exp, counter: expGained);
-        return expGained;
+        return AddScaledExp(expGained, message);
     }
 
     public long AddExp(ExpType expType, float modifier = 1f, long additionalExp = 0) {
@@ -147,17 +146,46 @@ public sealed class ExperienceManager {
                 return 0;
         }
 
-        return AddExp((long) ((expValue * modifier) * entry.Factor) + additionalExp, expType.Message());
+        long baseExp = (long) ((expValue * modifier) * entry.Factor);
+        float mult = ConfigProvider.Settings.ExpMultiplier(expType);
+        long scaled = ScaleExp(baseExp, mult);
+        return AddScaledExp(scaled + additionalExp, expType.Message());
+    }
+
+    // Applies the appropriate multiplier for the given ExpType to a provided base amount (unscaled).
+    public long AddBaseExp(long baseAmount, ExpType expType, ExpMessageCode? message = null) {
+        if (baseAmount <= 0) return 0;
+        float mult = ConfigProvider.Settings.ExpMultiplier(expType);
+        long scaled = ScaleExp(baseAmount, mult);
+        return AddScaledExp(scaled, message ?? expType.Message());
     }
 
     public void AddStaticExp(long amount) {
         if (amount <= 0) {
             return;
         }
-        Exp += amount;
-        session.Send(ExperienceUpPacket.Add(amount, Exp, RestExp, ExpMessageCode.s_msg_take_exp));
-        session.ConditionUpdate(ConditionType.exp, counter: amount);
+        float mult = ConfigProvider.Settings.ExpMultiplier(ExpType.none);
+        long scaled = ScaleExp(amount, mult);
+        Exp += scaled;
+        session.Send(ExperienceUpPacket.Add(scaled, Exp, RestExp, ExpMessageCode.s_msg_take_exp));
+        session.ConditionUpdate(ConditionType.exp, counter: scaled);
         LevelUp();
+    }
+
+    private static long ScaleExp(long amount, float multiplier) {
+        if (amount <= 0) return amount;
+        double scaled = Math.Round(amount * multiplier);
+        if (scaled <= 0) return 0;
+        return scaled > long.MaxValue ? long.MaxValue : (long) scaled;
+    }
+
+    private long AddScaledExp(long scaledAmount, ExpMessageCode message) {
+        long total = scaledAmount + GetRestExp(scaledAmount);
+        LevelUp();
+        AddPrestigeExp(message.Type());
+        session.Send(ExperienceUpPacket.Add(total, Exp, RestExp, message));
+        session.ConditionUpdate(ConditionType.exp, counter: total);
+        return total;
     }
 
     public void AddMobExp(int moblevel, float modifier = 1f, long additionalExp = 0) {
@@ -169,8 +197,8 @@ public sealed class ExperienceManager {
             return;
         }
 
-
-        AddExp((long) (expValue * modifier) + additionalExp, ExpType.monster.Message());
+        long baseExp = (long) (expValue * modifier) + additionalExp;
+        AddBaseExp(baseExp, ExpType.monster);
     }
 
     public bool LevelUp() {
