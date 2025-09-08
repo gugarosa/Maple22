@@ -87,7 +87,7 @@ public class FieldNpc : Actor<Npc> {
     public readonly SkillMetadata?[] Skills;
 
     public int SpawnPointId = 0;
-    public int EffectiveLevel => Math.Max(1, Value.Metadata.Basic.Level + ConfigProvider.Settings.Difficulty.EnemyLevelOffset);
+    public int EffectiveLevel => Math.Max(1, Value.Metadata.Basic.Level + ConfigProvider.Settings.Mob.EnemyLevelOffset);
 
     public MS2PatrolData? Patrol { get; private set; }
     private int currentWaypointIndex;
@@ -324,7 +324,14 @@ public class FieldNpc : Actor<Npc> {
 
         HandleDamageDealers();
 
-        Remove(delay: TimeSpan.FromSeconds(Value.Metadata.Dead.Time));
+        // Cap the death despawn delay via config, allowing faster cleanup for regular mobs
+        // while letting bosses keep their animations longer. 0 or negative disables capping
+        float cap = Value.IsBoss
+            ? Maple2.Server.Core.Config.ConfigProvider.Settings.Mob.BossDeathDespawnCapSeconds
+            : Maple2.Server.Core.Config.ConfigProvider.Settings.Mob.DeathDespawnCapSeconds;
+        double configured = Value.Metadata.Dead.Time;
+        double seconds = cap > 0 ? Math.Min(configured, cap) : configured;
+        Remove(delay: TimeSpan.FromSeconds(seconds));
     }
 
     public virtual void Animate(string sequenceName, float duration = -1f) {

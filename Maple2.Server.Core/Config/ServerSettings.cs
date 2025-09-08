@@ -6,7 +6,7 @@ public sealed class ServerSettings {
     public ExpSection Exp { get; set; } = new();
     public LootSection Loot { get; set; } = new();
     public MesosSection Mesos { get; set; } = new();
-    public DifficultySection Difficulty { get; set; } = new();
+    public MobSection Mob { get; set; } = new();
 
     public sealed class ExpSection {
         public float Global { get; set; } = 1.0f;
@@ -29,12 +29,16 @@ public sealed class ServerSettings {
         public float PerLevelMin { get; set; } = 1.0f;
         public float PerLevelMax { get; set; } = 3.0f;
     }
+    public sealed class MobSection {
+        // Combat tuning
+        public float DamageDealtRate { get; set; } = 1.0f; 
+        public float DamageTakenRate { get; set; } = 1.0f; 
+        public float EnemyHpScale { get; set; } = 1.0f; 
+        public int EnemyLevelOffset { get; set; } = 0; 
 
-    public sealed class DifficultySection {
-        public float DamageDealtRate { get; set; } = 1.0f;
-        public float DamageTakenRate { get; set; } = 1.0f;
-        public float EnemyHpScale { get; set; } = 1.0f;
-        public int EnemyLevelOffset { get; set; } = 0;
+        // Despawn tuning (seconds). 0 or negative disables capping
+        public float DeathDespawnCapSeconds { get; set; } = 0.0f;
+        public float BossDeathDespawnCapSeconds { get; set; } = 0.0f;
     }
 }
 

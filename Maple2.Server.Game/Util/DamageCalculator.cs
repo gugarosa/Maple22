@@ -144,12 +144,12 @@ public static class DamageCalculator {
             target.Buffs.Remove(buff.Id, target.ObjectId);
         }
 
-        // Apply difficulty-based global damage rates (PvE only)
-        var diff = ConfigProvider.Settings.Difficulty;
+        // Apply mob-oriented global damage rates (PvE only)
+        var mob = ConfigProvider.Settings.Mob;
         if (caster is FieldPlayer && target is FieldNpc) {
-            attackDamage *= diff.DamageDealtRate;
+            attackDamage *= mob.DamageDealtRate;
         } else if (caster is FieldNpc && target is FieldPlayer) {
-            attackDamage *= diff.DamageTakenRate;
+            attackDamage *= mob.DamageTakenRate;
         }
 
         return (damageType, (long) Math.Max(1, attackDamage));

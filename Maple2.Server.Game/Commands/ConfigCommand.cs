@@ -13,7 +13,7 @@ public class ConfigCommand : GameCommand {
         AddCommand(new ExpCommand());
         AddCommand(new LootCommand());
         AddCommand(new MesosCommand());
-        AddCommand(new DifficultyCommand());
+        AddCommand(new MobCommand());
     }
 
     private class ShowCommand : Command {
@@ -23,7 +23,7 @@ public class ConfigCommand : GameCommand {
 
         private void Handle(InvocationContext ctx) {
             var s = ConfigProvider.Settings;
-            ctx.Console.Out.WriteLine($"Rates:\n  EXP: global={s.Exp.Global:0.##}, kill={s.Exp.Kill:0.##}, quest={s.Exp.Quest:0.##}, dungeon={s.Exp.Dungeon:0.##}, prestige={s.Exp.Prestige:0.##}, mastery={s.Exp.Mastery:0.##}\n  Loot: global={s.Loot.GlobalDropRate:0.##}, boss={s.Loot.BossDropRate:0.##}, rare={s.Loot.RareDropRate:0.##}\n  Mesos: drop={s.Mesos.DropRate:0.##} (perLevel {s.Mesos.PerLevelMin:0.##}-{s.Mesos.PerLevelMax:0.##})\n  Difficulty: dealt={s.Difficulty.DamageDealtRate:0.##}, taken={s.Difficulty.DamageTakenRate:0.##}, enemyHp={s.Difficulty.EnemyHpScale:0.##}, enemyLvlOffset={s.Difficulty.EnemyLevelOffset}");
+            ctx.Console.Out.WriteLine($"Rates:\n  EXP: global={s.Exp.Global:0.##}, kill={s.Exp.Kill:0.##}, quest={s.Exp.Quest:0.##}, dungeon={s.Exp.Dungeon:0.##}, prestige={s.Exp.Prestige:0.##}, mastery={s.Exp.Mastery:0.##}\n  Loot: global={s.Loot.GlobalDropRate:0.##}, boss={s.Loot.BossDropRate:0.##}, rare={s.Loot.RareDropRate:0.##}\n  Mesos: drop={s.Mesos.DropRate:0.##} (perLevel {s.Mesos.PerLevelMin:0.##}-{s.Mesos.PerLevelMax:0.##})\n  Mob: dealt={s.Mob.DamageDealtRate:0.##}, taken={s.Mob.DamageTakenRate:0.##}, enemyHp={s.Mob.EnemyHpScale:0.##}, enemyLvlOffset={s.Mob.EnemyLevelOffset}, despawnCap={s.Mob.DeathDespawnCapSeconds:0.##}s, bossDespawnCap={s.Mob.BossDeathDespawnCapSeconds:0.##}s");
         }
     }
 
@@ -99,10 +99,10 @@ public class ConfigCommand : GameCommand {
         }
     }
 
-    private class DifficultyCommand : Command {
-        public DifficultyCommand() : base("difficulty", "Set difficulty rates.") {
-            var key = new Argument<string>("key", () => "dealt", "Key: dealt|taken|enemyhp|enemylvl");
-            var value = new Argument<float>("value", description: "New value (float for dealt/taken/enemyhp, integer for enemylvl)");
+    private class MobCommand : Command {
+        public MobCommand() : base("mob", "Set mob-related tuning (preferred over legacy difficulty).") {
+            var key = new Argument<string>("key", () => "dealt", "Key: dealt|taken|enemyhp|enemylvl|despawncap|bossdespawncap");
+            var value = new Argument<float>("value", description: "New value (float for all; enemylvl rounded to int)");
             AddArgument(key);
             AddArgument(value);
             this.SetHandler<InvocationContext, string, float>(Handle, key, value);
@@ -110,15 +110,17 @@ public class ConfigCommand : GameCommand {
 
         private void Handle(InvocationContext ctx, string key, float value) {
             key = key.ToLowerInvariant();
-            var diff = ConfigProvider.Settings.Difficulty;
+            var mob = ConfigProvider.Settings.Mob;
             switch (key) {
-                case "dealt": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } diff.DamageDealtRate = value; break;
-                case "taken": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } diff.DamageTakenRate = value; break;
-                case "enemyhp": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } diff.EnemyHpScale = value; break;
-                case "enemylvl": diff.EnemyLevelOffset = (int) Math.Round(value); break;
-                default: ctx.Console.Error.WriteLine("Unknown key. Use: dealt|taken|enemyhp|enemylvl"); return;
+                case "dealt": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } mob.DamageDealtRate = value; break;
+                case "taken": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } mob.DamageTakenRate = value; break;
+                case "enemyhp": if (value < 0f) { ctx.Console.Error.WriteLine("Value must be >= 0"); return; } mob.EnemyHpScale = value; break;
+                case "enemylvl": mob.EnemyLevelOffset = (int) Math.Round(value); break;
+                case "despawncap": mob.DeathDespawnCapSeconds = value; break;
+                case "bossdespawncap": mob.BossDeathDespawnCapSeconds = value; break;
+                default: ctx.Console.Error.WriteLine("Unknown key. Use: dealt|taken|enemyhp|enemylvl|despawncap|bossdespawncap"); return;
             }
-            ctx.Console.Out.WriteLine($"Difficulty {key} set to {value:0.##} (runtime only)");
+            ctx.Console.Out.WriteLine($"Mob {key} set to {value:0.##} (runtime only)");
         }
     }
 }

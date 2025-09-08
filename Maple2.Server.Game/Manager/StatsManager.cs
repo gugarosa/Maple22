@@ -48,7 +48,7 @@ public class StatsManager {
             Values = new Stats(npc.Value.Metadata.Stat);
             // Apply enemy level offset scaling across key combat stats
             int baseLevel = npc.Value.Metadata.Basic.Level;
-            int offset = ConfigProvider.Settings.Difficulty.EnemyLevelOffset;
+            int offset = ConfigProvider.Settings.Mob.EnemyLevelOffset;
             if (baseLevel > 0 && offset != 0) {
                 double factor = Math.Max(1.0, (double)Math.Max(1, baseLevel + offset) / baseLevel);
                 ScaleBasic(BasicAttribute.Health, factor);
@@ -62,7 +62,7 @@ public class StatsManager {
             }
 
             // Apply additional enemy HP global scaling
-            float hpScale = ConfigProvider.Settings.Difficulty.EnemyHpScale;
+            float hpScale = ConfigProvider.Settings.Mob.EnemyHpScale;
             if (hpScale != 1.0f) {
                 ScaleBasic(BasicAttribute.Health, hpScale);
             }

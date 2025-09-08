@@ -137,6 +137,7 @@ public abstract class Actor<T> : IActor<T>, IDisposable {
             record.AddDamage(DamageType.Normal, positiveDamage);
             Stats.Values[BasicAttribute.Health].Add(damageAmount);
             Field.Broadcast(StatsPacket.Update(this, BasicAttribute.Health));
+            CheckAndHandleDeath();
         }
 
         foreach ((DamageType damageType, long amount) in targetRecord.Damage) {
@@ -348,6 +349,14 @@ public abstract class Actor<T> : IActor<T>, IDisposable {
 
     protected virtual void OnDeath() {
         Buffs.TriggerEvent(this, this, this, EventConditionType.OnDeath);
+    }
+
+    public void CheckAndHandleDeath() {
+        if (IsDead) return;
+        if (Stats.Values[BasicAttribute.Health].Current <= 0) {
+            IsDead = true;
+            OnDeath();
+        }
     }
 
     /// <summary>

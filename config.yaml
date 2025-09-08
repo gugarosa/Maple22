@@ -16,9 +16,10 @@ mesos:
   per_level_min: 1.0
   per_level_max: 3.0
 
-difficulty:
+mob:
   damage_dealt_rate: 1.0
   damage_taken_rate: 1.0
   enemy_hp_scale: 1.0
   enemy_level_offset: 0
-
+  death_despawn_cap_seconds: 0.0
+  boss_death_despawn_cap_seconds: 0.0
