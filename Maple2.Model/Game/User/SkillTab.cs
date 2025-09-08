@@ -8,6 +8,11 @@ public class SkillTab : IByteSerializable, IByteDeserializable {
     public string Name;
     public Dictionary<int, int> Skills;
 
+    public SkillTab() {
+        Name = string.Empty;
+        Skills = new Dictionary<int, int>();
+    }
+
     public SkillTab(string name) {
         Name = name;
         Skills = new Dictionary<int, int>();
