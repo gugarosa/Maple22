@@ -79,11 +79,6 @@ dotnet_style_qualification_for_method = false:suggestion
 dotnet_style_qualification_for_property = false:suggestion
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggestion
 
-# Analyzer severities (example)
-dotnet_diagnostic.IDE0005.severity = warning   # remove unused usings
-dotnet_diagnostic.IDE0063.severity = suggestion # using var
-dotnet_diagnostic.IDE0044.severity = suggestion # make field readonly
-
 # ReSharper properties
 resharper_align_linq_query = true
 resharper_align_multiline_parameter = true

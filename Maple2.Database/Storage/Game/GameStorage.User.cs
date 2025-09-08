@@ -388,7 +388,11 @@ public partial class GameStorage {
 
             CharacterConfig? config = Context.CharacterConfig.Find(characterId);
             if (config == null) {
-                return false;
+                // Create missing config lazily for legacy characters
+                config = new CharacterConfig {
+                    CharacterId = characterId,
+                };
+                Context.CharacterConfig.Add(config);
             }
 
             config.KeyBinds = keyBinds;
